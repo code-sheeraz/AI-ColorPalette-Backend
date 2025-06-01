@@ -22,7 +22,20 @@ app.post("/generate-colors", async (req, res) => {
       {
         parts: [
           {
-            text: `Generate a 5-color HEX palette based on: "${prompt}". Return only an array of 5 HEX codes like ['#123456', '#abcdef', ...].`
+            text: `
+You are a creative AI that designs color palettes.
+
+Based on the prompt: "${prompt}", respond in strict JSON format with:
+
+{
+  "palette_name": "A short, creative name for the palette",
+  "description": "1-2 sentence description of the vibe/style",
+  "colors": ["#HEX1", "#HEX2", "#HEX3", "#HEX4", "#HEX5"],
+  "suggestions": ["Prompt idea 1", "Prompt idea 2", "Prompt idea 3"]
+}
+
+Only return valid JSON.
+            `
           }
         ]
       }
@@ -39,14 +52,21 @@ app.post("/generate-colors", async (req, res) => {
     });
 
     const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text;
-    const hexCodes = text.match(/#[A-Fa-f0-9]{6}/g);
-    res.json({ colors: hexCodes });
+    const aiResponse = data.candidates[0].content.parts[0].text;
+
+    // Try to parse the JSON block Gemini returned
+    const jsonStart = aiResponse.indexOf('{');
+    const jsonEnd = aiResponse.lastIndexOf('}');
+    const cleanJSON = aiResponse.substring(jsonStart, jsonEnd + 1);
+
+    const result = JSON.parse(cleanJSON);
+    res.json(result);
+
   } catch (error) {
     console.error("Gemini API error:", error);
     res.status(500).json({ error: "Failed to fetch from Gemini API" });
   }
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
