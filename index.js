@@ -7,7 +7,9 @@ const fetch = require("node-fetch");
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://ai-color-palette-frontend.vercel.app/"
+}));
 app.use(express.json());
 
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
